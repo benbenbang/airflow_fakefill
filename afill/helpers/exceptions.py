@@ -1,0 +1,2 @@
+class DagNotFoundError(Exception):
+    pass
