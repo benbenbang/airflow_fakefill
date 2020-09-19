@@ -6,6 +6,26 @@ Due to migrating to Kubernetes-host Airflow and using different backend, we need
 
 
 
+## Installations
+
+### Method 1
+
+```bash
+$ pip install git+ssh://git@github.com/benbenbang/airflow_fastfill.git
+```
+
+
+
+### Method 2
+
+```bash
+$ git clone git@github.com:benbenbang/airflow_fastfill.git
+$ cd airflow_fastfill
+$ pip install .
+```
+
+
+
 ## Usages
 
 ```bash
