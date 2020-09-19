@@ -1,0 +1,10 @@
+dags:
+  - dag_a
+  - dag_b
+
+settings:
+  start_date: 2019-01-01
+  maximum: "365"
+  traceback: false
+  confirm: true
+  pause_only: true
