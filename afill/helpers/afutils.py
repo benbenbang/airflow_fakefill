@@ -47,7 +47,7 @@ def fetch_dag(session, dag_id: str, get_pause_only: bool, confirm: bool) -> List
 
     if not confirm and dag_id:
         click.confirm(f"{msg}, sure about that?", abort=True)
-    elif dag_id == "all":
+    elif dag_id == "all" and confirm:
         logger.warning(msg)
 
     try:

@@ -34,12 +34,13 @@ def fastfill(
     traceback = parse_bool(configs.get("settings", {}).get("traceback", v))
 
     # Dags settings
-    exclude_dags = configs.get("dags", {}).get("excludes", [])
-    run_only = configs.get("dags", {}).get("run_only", [])
+    dags_yml = configs.get("dags", [])
+    run_only = dags_yml if isinstance(dags_yml, list) else dags_yml.get("run_only", [])
+    exclude_dags = dags_yml.get("excludes", []) if isinstance(dags_yml, dict) else []
 
     # fetch dag
     if run_only:
-        dagbag = [fetch_dag(dag_id, get_pause_only=pause_only, confirm=confirm) for dag_id in run_only]
+        dagbag = [fetch_dag(dag_id=dag_id, get_pause_only=pause_only, confirm=confirm) for dag_id in run_only]
     else:
         dagbag = fetch_dag(dag_id=dag_id, get_pause_only=pause_only, confirm=confirm)
 

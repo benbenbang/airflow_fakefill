@@ -1,32 +1,43 @@
 # standard library
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, TypeVar, Union
 
 # pypi/conda library
-from loguru import logger
+from loguru import logger as _LOGGER
 from pytz import utc
 from yaml import unsafe_load
 
 Datetime = TypeVar("datetime", bound=datetime)
 DefaultDate: Datetime = datetime.strptime("2020-09-01 00:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc)
 
-logger.remove()
-logger.add(sys.stdout, level="INFO", filter=lambda record: record["level"].no >= 10)
-logger.add(sys.stderr, level="ERROR", filter=lambda record: record["level"].no >= 10)
+
+def getLogger():
+    _LOGGER.remove()
+
+    # STDOUT / Error Only
+    _LOGGER.add(sys.stdout, level="INFO", filter=lambda record: record["level"].no < logging.ERROR)
+    _LOGGER.add(sys.stderr, level="ERROR", filter=lambda record: record["level"].no >= logging.INFO)
+
+    return _LOGGER
 
 
-def parse_date(ctx, param, conf) -> Datetime:
+def parse_date_cli(ctx, param, conf) -> Datetime:
+    return parse_date(conf)
+
+
+def parse_date(conf) -> Datetime:
     try:
         if isinstance(conf, datetime):
             date = conf.replace(tzinfo=utc)
-        elif isinstance(conf, str):
+        elif isinstance(conf, str) and conf:
             date = datetime.strptime(conf, "%Y-%m-%d").replace(tzinfo=utc)
         else:
             date = DefaultDate
     except Exception:
-        print("Date need to follow pattern: %Y-%m-%d")
+        logger.warning("Date need to follow pattern: %Y-%m-%d")
     else:
         return date
 
@@ -57,3 +68,6 @@ def read_config(config_path) -> Union[Dict, None]:
     configs = unsafe_load(raw_yaml)
 
     return configs
+
+
+logger = getLogger()
