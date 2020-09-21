@@ -35,7 +35,7 @@ def fastfill(
 
     # Dags settings
     dags_yml = configs.get("dags", [])
-    run_only = dags_yml if isinstance(dags_yml, list) else dags_yml.get("run_only", [])
+    run_only = dags_yml.get("run_only", []) if isinstance(dags_yml, dict) else None
     exclude_dags = dags_yml.get("excludes", []) if isinstance(dags_yml, dict) else []
 
     # fetch dag
