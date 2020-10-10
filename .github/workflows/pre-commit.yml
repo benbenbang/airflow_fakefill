@@ -15,4 +15,5 @@ jobs:
     - name: pre-commit
       run: |
         pip install pre-commit
-        pre-commit run --from-ref origin/master --to-ref HEAD
+        git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
+        pre-commit run --from-ref origin/HEAD --to-ref HEAD
