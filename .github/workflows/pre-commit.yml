@@ -12,4 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.0
+    - name: pre-commit
+      run: |
+        pip install pre-commit
+        pre-commit run --from-ref origin/HEAD --to-ref HEAD
