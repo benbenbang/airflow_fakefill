@@ -22,7 +22,7 @@ jobs:
       run: |
         apt update && apt install -yqq --no-install-recommends git wget
         wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
-        chmod +x /usr/local/bin/hadolint
+        sudo chmod +x /usr/local/bin/hadolint
 
     - name: Run pre-commit test
       uses: pre-commit/action@v2.0.0
