@@ -21,8 +21,8 @@ jobs:
     - name: Install Hadolint
       run: |
         sudo apt update && sudo apt install -yqq --no-install-recommends git wget
-        wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
-        sudo chmod +x /usr/local/bin/hadolint
+        sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
+        sudo chmod 755 /usr/local/bin/hadolint
 
     - name: Run pre-commit test
       uses: pre-commit/action@v2.0.0
