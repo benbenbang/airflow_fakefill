@@ -2,9 +2,9 @@ name: Pre-commit
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   pre-commit:
@@ -23,8 +23,10 @@ jobs:
         sudo apt update && sudo apt install -yqq --no-install-recommends git wget
         sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
         sudo chmod 755 /usr/local/bin/hadolint
+        echo "branch: ${{ env.GITHUB_BASE_REF_SLUG }}"
+        git remote set-head origin -a "${{ env.GITHUB_BASE_REF_SLUG }}"
 
     - name: Run pre-commit test
       uses: pre-commit/action@v2.0.0
       with:
-        extra_args: --config .pre-commit-config-gh.yml
+        extra_args: --config .pre-commit-config.yaml -v --from-ref origin/HEAD --to-ref HEAD
