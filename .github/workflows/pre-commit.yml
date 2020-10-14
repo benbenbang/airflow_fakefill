@@ -24,7 +24,7 @@ jobs:
         sudo apt update && sudo apt install -yqq --no-install-recommends git wget
         sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
         sudo chmod 755 /usr/local/bin/hadolint
-        echo "branch: ${{ env.GITHUB_BASE_REF_SLUG }}"
+        echo "branch: ${{ github.ref }}"
         git remote set-head origin -a "${{ env.GITHUB_BASE_REF_SLUG }}"
 
     - name: Run pre-commit test
