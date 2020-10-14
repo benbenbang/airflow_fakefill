@@ -23,7 +23,7 @@ jobs:
       run: |
         echo "Pull request's base branch is: ${BASE_BRANCH}"
       env:
-        BASE_BRANCH: ${{ github.base_ref }}
+        BASE_BRANCH: ${{ github.head_ref }}
 
     - name: Install Hadolint
       run: |
