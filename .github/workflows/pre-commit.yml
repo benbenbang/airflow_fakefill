@@ -19,13 +19,20 @@ jobs:
     - name: Setup python latest version
       uses: actions/setup-python@v2
 
+    - name: Get Branch
+      run: |
+        raw=$(git branch -r --contains ${{ github.ref }})
+        branch=${raw/origin\/}
+        echo ::set-env name=BRANCH::$branch
+
+    - run: echo ${{ env.BRANCH }}
+
     - name: Install Hadolint
       run: |
         sudo apt update && sudo apt install -yqq --no-install-recommends git wget
         sudo wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.18.0/hadolint-Linux-x86_64
         sudo chmod 755 /usr/local/bin/hadolint
-        echo "branch: ${{ github.ref }}"
-        git remote set-head origin -a "${{ env.GITHUB_BASE_REF_SLUG }}"
+        git remote set-head origin -a "${{ env.BRANCH }}"
 
     - name: Run pre-commit test
       uses: pre-commit/action@v2.0.0
