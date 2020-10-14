@@ -44,7 +44,9 @@ def fastfill(
     elif dag_id:
         dagbag = fetch_dag(dag_id=dag_id, get_pause_only=pause_only, confirm=confirm)
     else:
-        raise ValueError("Cannot find any dag_id. Make sure you passed the right config file or try `-d` to pass dag_id")
+        raise ValueError(
+            "Cannot find any dag_id. Make sure you passed the right config file or try `-d` to pass dag_id"
+        )
 
     dagbag = [dag for dag in dagbag if dag[0] not in exclude_dags]
 
