@@ -22,7 +22,7 @@ jobs:
     - name: Set Head
       run: |
         echo "Pull request's branch name is: ${BASE_BRANCH}"
-        git remote set-head origin -a "${BASE_BRANCH}"
+        git remote set-head origin "${BASE_BRANCH}"
       env:
         BASE_BRANCH: ${{ github.head_ref }}
       if: github.event_name == 'pull_request'
