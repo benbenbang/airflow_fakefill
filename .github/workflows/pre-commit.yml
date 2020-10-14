@@ -21,11 +21,9 @@ jobs:
 
     - name: Get Branch
       run: |
-        raw=$(git branch -r --contains ${{ github.ref }})
-        branch=${raw/origin\/}
-        echo ::set-env name=BRANCH::$branch
-
-    - run: echo ${{ env.BRANCH }}
+        echo "Pull request's base branch is: ${BASE_BRANCH}"
+      env:
+        BASE_BRANCH: ${{ github.base_ref }}
 
     - name: Install Hadolint
       run: |
