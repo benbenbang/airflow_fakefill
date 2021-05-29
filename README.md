@@ -11,12 +11,16 @@ Due to migrating to Kubernetes-host Airflow and using different backend, we need
 ### Method 1
 
 ```bash
-$ pip install git+ssh://git@github.com/benbenbang/airflow_fastfill.git
+$ pip install afill
 ```
 
-
-
 ### Method 2
+
+```bash
+$ pip install git+https://git@github.com/benbenbang/airflow_fastfill.git
+```
+
+### Method 3
 
 ```bash
 $ git clone git@github.com:benbenbang/airflow_fastfill.git
