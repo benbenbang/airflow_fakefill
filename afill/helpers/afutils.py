@@ -10,8 +10,11 @@ import click
 from airflow.models import DAG, DagBag, DagModel
 from airflow.utils.db import provide_session
 
-from .cfutils import logger
-from .exceptions import DagNotFoundError
+# afill plugin
+from afill.helpers.exceptions import DagNotFoundError
+from afill.helpers.logging import getLogger
+
+logger = getLogger("cfutils")
 
 
 def get_dag(dag) -> Tuple[str, DAG]:

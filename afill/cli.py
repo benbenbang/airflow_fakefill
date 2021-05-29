@@ -18,10 +18,19 @@ import click
 
 # afill plugin
 from afill.catchup import Datetime, fastfill
-from afill.helpers.cfutils import logger, parse_date_cli
+from afill.helpers.cfutils import parse_date_cli
+from afill.helpers.logging import getLogger
+from afill.helpers.template import gen_template
+
+logger = getLogger("cfutils")
 
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
 @click.option(
     "dag_id", "-d", default="", type=click.STRING, help="the dag name you want to backfill [dag_id or all]",
 )
@@ -34,20 +43,27 @@ from afill.helpers.cfutils import logger, parse_date_cli
     callback=parse_date_cli,
 )
 @click.option(
-    "maximum", "-m", default=365, type=click.IntRange(min=0, max=365, clamp=True), help="maximum days to backfill",
+    "maximum", "-m", default=1, type=click.IntRange(min=1, max=365, clamp=True), help="maximum days to backfill",
 )
 @click.option("config_path", "-cp", default="", type=click.STRING, help="config for auto fastfill if have one")
 @click.option("-i", default=False, is_flag=True, help="fill all ignore it just ran recently")
 @click.option("-p", default=False, is_flag=True, help="only fill paused dags")
 @click.option("-y", default=False, is_flag=True, help="confirm by default")
 @click.option("-v", default=False, is_flag=True, help="print traceback if got error")
-def ffcli(dag_id: str, start_date: Datetime, maximum: int, config_path: str, i: bool, p: bool, y: bool, v: bool):
-    if not dag_id and not Path(f"{config_path}").is_file():
+def fill(dag_id: str, start_date: Datetime, maximum: int, config_path: str, i: bool, p: bool, y: bool, v: bool):
+
+    if not dag_id and not Path(config_path).is_file():
         logger.error("Need to assign a dag id or a path to config yaml")
         raise click.Abort()
 
     fastfill(dag_id, start_date, maximum, config_path, i, p, y, v)
 
 
+@cli.command()
+@click.option("template_path", "-p", default="", type=click.STRING, help="Generate a config template yaml")
+def template(template_path):
+    gen_template(path=template_path)
+
+
 if __name__ == "__main__":
-    ffcli()
+    cli()

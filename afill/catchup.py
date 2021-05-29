@@ -13,17 +13,25 @@ from airflow.utils.state import State
 
 # afill plugin
 from afill.helpers.afutils import fetch_dag, gen_run_id
-from afill.helpers.cfutils import Datetime, check_recent, logger, parse_bool, parse_date, read_config
+from afill.helpers.cfutils import Datetime, check_recent, parse_bool, parse_date, read_config
 from afill.helpers.cronvert import cron_counts
+from afill.helpers.logging import getLogger
+
+logger = getLogger("catchup")
 
 
 def fastfill(
     dag_id: str, start_date: Datetime, maximum: int, config_path: str, i: bool, p: bool, y: bool, v: bool
 ) -> NoReturn:
     # Set default
-    ok_dag = 0
+    ok_dag = ok_task = 0
     dag_id = dag_id.lower().strip()
-    configs = read_config(config_path)
+
+    # Read only not ""
+    if config_path:
+        configs = read_config(config_path)
+    else:
+        configs = {}
 
     # General settings
     start_date = parse_date(configs.get("settings", {}).get("start_date", start_date))
@@ -61,7 +69,7 @@ def fastfill(
             # if not fill all schedules flag and has latest execution date, start from the recent execution date
             if check_recent(dag.latest_execution_date) and not ignore:
                 start_date = dag.latest_execution_date
-                delta = False
+                delta = 0
             else:
                 # get default date from the config.yml, if not backfill starting from 2020-09-01
                 start_date = datetime.fromtimestamp(dag.default_args.get("start_date", start_date).timestamp())
@@ -79,7 +87,7 @@ def fastfill(
                 external_trigger = False
                 if delta:
                     # Maximum unit: set by crontab
-                    maximum = cron_counts(dag.schedule_interval)
+                    maximum = cron_counts(dag.schedule_interval, delta)
                     run_dates = run_dates[:maximum]
             else:
                 fake_last_execution = (datetime.utcnow() - timedelta(days=1)).replace(tzinfo=utc)
@@ -87,7 +95,6 @@ def fastfill(
                 external_trigger = True
 
             logger.info(f"{dag_id} has {len(run_dates)} tasks to be backfill")
-            ok_task = 0
 
             for date in run_dates:
                 try:

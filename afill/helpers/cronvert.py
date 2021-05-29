@@ -1,8 +1,11 @@
 # standard library
 import re
 
-# pypi/conda library
-from loguru import logger
+# afill plugin
+from afill.helpers.logging import getLogger
+
+logger = getLogger("cronvert")
+
 
 DAY_NAMES = list(zip(("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"), list(range(7))))
 MINUTES = (0, 59)

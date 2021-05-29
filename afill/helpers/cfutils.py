@@ -1,27 +1,20 @@
 # standard library
-import logging
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, TypeVar, Union
 
 # pypi/conda library
-from loguru import logger as _LOGGER
 from pytz import utc
 from yaml import unsafe_load
 
+# afill plugin
+from afill.helpers.logging import getLogger
+
+logger = getLogger("cfutils")
+
+
 Datetime = TypeVar("datetime", bound=datetime)
 DefaultDate: Datetime = datetime.strptime("2020-09-01 00:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc)
-
-
-def getLogger():
-    _LOGGER.remove()
-
-    # STDOUT / Error Only
-    _LOGGER.add(sys.stdout, level="INFO", filter=lambda record: record["level"].no < logging.ERROR)
-    _LOGGER.add(sys.stderr, level="ERROR", filter=lambda record: record["level"].no >= logging.INFO)
-
-    return _LOGGER
 
 
 def parse_date_cli(ctx, param, conf) -> Datetime:
@@ -68,6 +61,3 @@ def read_config(config_path) -> Union[Dict, None]:
     configs = unsafe_load(raw_yaml)
 
     return configs
-
-
-logger = getLogger()
