@@ -68,13 +68,15 @@ def fill(
     y: bool,
     v: bool,
 ):
+    ctx = click.get_current_context()
 
     if not dag_id and not Path(config_path).is_file():
         logger.error("Need to assign a dag id or a path to config yaml")
-        raise click.Abort()
+        ctx.abort()
 
     if not start_date and not maximum_day and not maximum_unit:
         logger.error("Need to at least provide a process `start_date` or `maximum` or `maximum_unit`")
+        ctx.abort()
 
     fastfill(dag_id, start_date, maximum_day, maximum_unit, config_path, i, p, y, v)
 

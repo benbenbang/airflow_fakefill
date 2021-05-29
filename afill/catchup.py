@@ -94,17 +94,19 @@ def fastfill(
                 run_dates.reverse()
                 external_trigger = False
 
-                num = (datetime.utcnow() - start_date).day
+                num = (datetime.utcnow().replace(tzinfo=utc) - start_date).days
                 num = min(num, maximum_day) if maximum_day else num
 
                 # Maximum unit: set by crontab + maximum_xxx
                 process_num = cron_counts(dag.schedule_interval, num)
 
-                if not maximum_day:
-                    maximum_unit = maximum_unit or 10 * 24 * 30
+                if maximum_unit:
                     process_num = min(maximum_unit, process_num)
 
-                run_dates = run_dates[:process_num] if len(run_dates) > process_num else run_dates
+                if run_dates:
+                    run_dates = run_dates[:process_num] if len(run_dates) > process_num else run_dates
+                else:
+                    run_dates = [Pendulum.utcnow().replace(hour=0, minute=0, second=0)]
             else:
                 fake_last_execution = (datetime.utcnow() - timedelta(days=1)).replace(tzinfo=utc)
                 run_dates = [fake_last_execution]
