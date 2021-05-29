@@ -1,5 +1,5 @@
 # standard library
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, TypeVar, Union
 
@@ -14,11 +14,15 @@ logger = getLogger("cfutils")
 
 
 Datetime = TypeVar("datetime", bound=datetime)
-DefaultDate: Datetime = datetime.strptime("2020-09-01 00:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=utc)
+DefaultDate: Datetime = datetime.strptime(
+    f"{(datetime.utcnow().date() - timedelta(days=180))} 00:00:00", "%Y-%m-%d %H:%M:%S"
+).replace(tzinfo=utc)
 
 
 def parse_date_cli(ctx, param, conf) -> Datetime:
-    return parse_date(conf)
+    if conf:
+        return parse_date(conf)
+    return ""
 
 
 def parse_date(conf) -> Datetime:

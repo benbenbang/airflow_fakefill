@@ -43,20 +43,40 @@ def cli():
     callback=parse_date_cli,
 )
 @click.option(
-    "maximum", "-m", default=1, type=click.IntRange(min=1, max=365, clamp=True), help="maximum days to backfill",
+    "maximum_day", "-md", default=0, type=click.IntRange(min=0, max=180, clamp=True), help="maximum days to backfill",
+)
+@click.option(
+    "maximum_unit",
+    "-mu",
+    default=0,
+    type=click.IntRange(min=0, max=60 * 24 * 30, clamp=True),
+    help="max unit (based on the crontab) to backfill",
 )
 @click.option("config_path", "-cp", default="", type=click.STRING, help="config for auto fastfill if have one")
 @click.option("-i", default=False, is_flag=True, help="fill all ignore it just ran recently")
 @click.option("-p", default=False, is_flag=True, help="only fill paused dags")
 @click.option("-y", default=False, is_flag=True, help="confirm by default")
 @click.option("-v", default=False, is_flag=True, help="print traceback if got error")
-def fill(dag_id: str, start_date: Datetime, maximum: int, config_path: str, i: bool, p: bool, y: bool, v: bool):
+def fill(
+    dag_id: str,
+    start_date: Datetime,
+    maximum_day: int,
+    maximum_unit: int,
+    config_path: str,
+    i: bool,
+    p: bool,
+    y: bool,
+    v: bool,
+):
 
     if not dag_id and not Path(config_path).is_file():
         logger.error("Need to assign a dag id or a path to config yaml")
         raise click.Abort()
 
-    fastfill(dag_id, start_date, maximum, config_path, i, p, y, v)
+    if not start_date and not maximum_day and not maximum_unit:
+        logger.error("Need to at least provide a process `start_date` or `maximum` or `maximum_unit`")
+
+    fastfill(dag_id, start_date, maximum_day, maximum_unit, config_path, i, p, y, v)
 
 
 @cli.command()
