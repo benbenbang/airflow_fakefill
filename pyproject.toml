@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "afill"
-version = "0.1.0"
+version = "0.1.7"
 description = ""
 authors = ["Ben CHEN <bn@benbenbang.io>"]
 
@@ -8,14 +8,16 @@ authors = ["Ben CHEN <bn@benbenbang.io>"]
 python = "^3.7"
 pyyaml = "^5.3.1"
 loguru = "^0.5.2"
-apache-airflow = "^1.10.12"
-pre-commit = "^2.7.1"
 
 [tool.poetry.dev-dependencies]
+apache-airflow = "^1.10.12"
+psycopg2-binary = "^2.8.6"
+twine = "^3.4.1"
+pre-commit = "^2.7.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry.scripts]
-afill="afill.cli:ffcli"
+afill="afill.cli:cli"

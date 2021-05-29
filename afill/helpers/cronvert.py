@@ -1,8 +1,14 @@
 # standard library
 import re
+from datetime import datetime
+from typing import TypeVar
 
-# pypi/conda library
-from loguru import logger
+# afill plugin
+from afill.helpers.logging import getLogger
+
+logger = getLogger("cronvert")
+
+Datetime = TypeVar("datetime", bound=datetime)
 
 DAY_NAMES = list(zip(("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"), list(range(7))))
 MINUTES = (0, 59)
@@ -47,6 +53,45 @@ class __CronToMonthly__:
         The epoch should be defined down to the minute sorted by
         descending significance.
         """
+        self.compute_epoch(line, epoch=DEFAULT_EPOCH, epoch_utc_offset=0)
+
+    def __call__(self, num: int) -> int:
+        """ This method is just to calculate an approximate upper limit.
+        Crontab like `* 8 1 * Sun` will be round up to "every minute past hour 8 on first day of month"
+        i.e. Weekday will be dropped if get month day
+
+        Range -> 0 <= base_unit <= 1440 per day
+        """
+        minute, hour, day, _, _ = self.numerical_tab
+
+        # Get execution times
+        count_min = len(minute)
+        count_hour = len(hour)
+        count_day = len(day)
+
+        base_unit = 1
+
+        base_unit *= count_min if count_min else base_unit
+        base_unit *= count_hour if count_hour else base_unit
+        base_unit *= count_day if count_day else base_unit
+
+        return base_unit
+
+    def __repr__(self):
+        base = self.__class__.__name__ + "(%s)"
+        cron_line = self.string_tab + [str(self.comment)]
+        if not self.comment:
+            cron_line.pop()
+        arguments = '"' + " ".join(cron_line) + '"'
+        if self.epoch != DEFAULT_EPOCH:
+            return base % (arguments + ", epoch=" + repr(self.epoch))
+        else:
+            return base % arguments
+
+    def __str__(self):
+        return repr(self)
+
+    def compute_epoch(self, line: str, epoch=DEFAULT_EPOCH, epoch_utc_offset: int = 0):
         for key, value in list(SUBSTITUTIONS.items()):
             if line.startswith(key):
                 line = line.replace(key, value)
@@ -74,42 +119,6 @@ class __CronToMonthly__:
             self.epoch = (y, mo, d, h, m, epoch_utc_offset)
         else:
             self.epoch = epoch
-
-    def __call__(self, num: int = 3) -> int:
-        """ This method is just to calculate an approximate upper limit.
-        Crontab like `* 8 1 * Sun` will be round up to "every minute past hour 8 on first day of month"
-        i.e. Weekday will be dropped if get month day
-        """
-        minute, hour, day, _, _ = self.numerical_tab
-
-        # Get execution times
-        count_min = len(minute)
-        count_hour = len(hour)
-        count_day = len(day)
-
-        base_unit = 1
-
-        base_unit *= count_min if count_min else base_unit
-        base_unit *= count_hour if count_hour else base_unit
-        if base_unit >= 1024:
-            return base_unit
-        else:
-            base_unit *= count_day if count_day else base_unit
-            return base_unit * num
-
-    def __repr__(self):
-        base = self.__class__.__name__ + "(%s)"
-        cron_line = self.string_tab + [str(self.comment)]
-        if not self.comment:
-            cron_line.pop()
-        arguments = '"' + " ".join(cron_line) + '"'
-        if self.epoch != DEFAULT_EPOCH:
-            return base % (arguments + ", epoch=" + repr(self.epoch))
-        else:
-            return base % arguments
-
-    def __str__(self):
-        return repr(self)
 
     def compute_numtab(self):
         """

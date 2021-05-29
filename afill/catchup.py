@@ -4,8 +4,13 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import NoReturn
 
+try:
+    # pypi/conda library
+    from pendulum import Pendulum
+except Exception:
+    from pendulum import DateTime as Pendulum  # noqa
+
 # pypi/conda library
-from pendulum import Pendulum
 from pytz import utc
 
 # airflow library
@@ -13,21 +18,38 @@ from airflow.utils.state import State
 
 # afill plugin
 from afill.helpers.afutils import fetch_dag, gen_run_id
-from afill.helpers.cfutils import Datetime, check_recent, logger, parse_bool, parse_date, read_config
+from afill.helpers.cfutils import Datetime, check_recent, parse_bool, parse_date, read_config
 from afill.helpers.cronvert import cron_counts
+from afill.helpers.logging import getLogger
+
+logger = getLogger("catchup")
 
 
 def fastfill(
-    dag_id: str, start_date: Datetime, maximum: int, config_path: str, i: bool, p: bool, y: bool, v: bool
+    dag_id: str,
+    start_date: Datetime,
+    maximum_day: int,
+    maximum_unit: int,
+    config_path: str,
+    i: bool,
+    p: bool,
+    y: bool,
+    v: bool,
 ) -> NoReturn:
     # Set default
     ok_dag = 0
     dag_id = dag_id.lower().strip()
-    configs = read_config(config_path)
+
+    # Read only not ""
+    if config_path:
+        configs = read_config(config_path)
+    else:
+        configs = {}
 
     # General settings
     start_date = parse_date(configs.get("settings", {}).get("start_date", start_date))
-    maximum = int(configs.get("settings", {}).get("maximum", maximum))
+    maximum_day = int(configs.get("settings", {}).get("maximum_day", maximum_day))
+    maximum_unit = int(configs.get("settings", {}).get("maximum_unit", maximum_unit))
     ignore = parse_bool(configs.get("settings", {}).get("ignore", i))
     pause_only = parse_bool(configs.get("settings", {}).get("pause_only", p))
     confirm = parse_bool(configs.get("settings", {}).get("comfirm", y))
@@ -58,17 +80,11 @@ def fastfill(
 
     for dag_id, dag in dagbag:
         try:
+            ok_task = 0
+
             # if not fill all schedules flag and has latest execution date, start from the recent execution date
-            if check_recent(dag.latest_execution_date) and not ignore:
-                start_date = dag.latest_execution_date
-                delta = False
-            else:
-                # get default date from the config.yml, if not backfill starting from 2020-09-01
-                start_date = datetime.fromtimestamp(dag.default_args.get("start_date", start_date).timestamp())
-                delta = (datetime.utcnow() - start_date).days > maximum
-                # backfill no more than n days
-                if delta:
-                    start_date = datetime.utcnow() - timedelta(days=maximum)
+            if ignore and check_recent(dag.latest_execution_date):
+                continue
 
             # If schedule is None: set external trigger to True
             if dag.schedule_interval:
@@ -77,17 +93,26 @@ def fastfill(
                 run_dates = [rd for rd in run_dates if not isinstance(rd, Pendulum)]
                 run_dates.reverse()
                 external_trigger = False
-                if delta:
-                    # Maximum unit: set by crontab
-                    maximum = cron_counts(dag.schedule_interval)
-                    run_dates = run_dates[:maximum]
+
+                num = (datetime.utcnow().replace(tzinfo=utc) - start_date).days
+                num = min(num, maximum_day) if maximum_day else num
+
+                # Maximum unit: set by crontab + maximum_xxx
+                process_num = cron_counts(dag.schedule_interval, num)
+
+                if maximum_unit:
+                    process_num = min(maximum_unit, process_num)
+
+                if run_dates:
+                    run_dates = run_dates[:process_num] if len(run_dates) > process_num else run_dates
+                else:
+                    run_dates = [Pendulum.utcnow().replace(hour=0, minute=0, second=0)]
             else:
                 fake_last_execution = (datetime.utcnow() - timedelta(days=1)).replace(tzinfo=utc)
                 run_dates = [fake_last_execution]
                 external_trigger = True
 
             logger.info(f"{dag_id} has {len(run_dates)} tasks to be backfill")
-            ok_task = 0
 
             for date in run_dates:
                 try:
