@@ -16,16 +16,16 @@ from pytz import utc
 # airflow library
 from airflow.utils.state import State
 
-# afill plugin
-from afill.helpers.afutils import fetch_dag, gen_run_id
-from afill.helpers.cfutils import Datetime, check_recent, parse_bool, parse_date, read_config
-from afill.helpers.cronvert import cron_counts
-from afill.helpers.logging import getLogger
+# fakefill plugin
+from fakefill.helpers.afutils import fetch_dag, gen_run_id, get_last_execution, trans_to_datetime
+from fakefill.helpers.cfutils import Datetime, check_recent, parse_bool, parse_date, read_config
+from fakefill.helpers.cronvert import cron_counts
+from fakefill.helpers.logging import getLogger
 
 logger = getLogger("catchup")
 
 
-def fastfill(
+def fakefill(
     dag_id: str,
     start_date: Datetime,
     maximum_day: int,
@@ -82,15 +82,20 @@ def fastfill(
         try:
             ok_task = 0
 
+            # Subdag will be ignored
+            if dag.is_subdag:
+                continue
+
             # if not fill all schedules flag and has latest execution date, start from the recent execution date
-            if ignore and check_recent(dag.latest_execution_date):
+            if ignore and check_recent(get_last_execution(dag)):
                 continue
 
             # If schedule is None: set external trigger to True
             if dag.schedule_interval:
                 # get all the schdule starting from the given date
                 run_dates = dag.get_run_dates(start_date)
-                run_dates = [rd for rd in run_dates if not isinstance(rd, Pendulum)]
+                run_dates = [trans_to_datetime(rd) for rd in run_dates]
+                run_dates = [rd for rd in run_dates if rd]
                 run_dates.reverse()
                 external_trigger = False
 
@@ -98,10 +103,9 @@ def fastfill(
                 num = min(num, maximum_day) if maximum_day else num
 
                 # Maximum unit: set by crontab + maximum_xxx
-                process_num = cron_counts(dag.schedule_interval, num)
-
-                if maximum_unit:
-                    process_num = min(maximum_unit, process_num)
+                process_num, daily_unit = cron_counts(dag.schedule_interval)
+                process_num = process_num * num if process_num <= 744 else daily_unit * num
+                process_num = min(maximum_unit, process_num)
 
                 if run_dates:
                     run_dates = run_dates[:process_num] if len(run_dates) > process_num else run_dates

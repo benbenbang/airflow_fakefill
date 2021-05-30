@@ -1,25 +1,44 @@
 # standard library
 import os
 import sys
-from typing import List, Tuple
+from datetime import datetime
+from typing import List, Tuple, TypeVar, Union
 
 # pypi/conda library
 import click
+
+try:
+    # pypi/conda library
+    from pendulum import Pendulum
+except Exception:
+    from pendulum import DateTime as Pendulum  # noqa
+
+# pypi/conda library
+from pytz import utc
 
 # airflow library
 from airflow.models import DAG, DagBag, DagModel
 from airflow.utils.db import provide_session
 
-# afill plugin
-from afill.helpers.exceptions import DagNotFoundError
-from afill.helpers.logging import getLogger
+# fakefill plugin
+from fakefill.helpers.exceptions import DagNotFoundError
+from fakefill.helpers.logging import getLogger
 
-logger = getLogger("cfutils")
+Datetime = TypeVar("datetime", bound=datetime)
+logger = getLogger("afutils")
+
+
+@provide_session
+def get_session(session):
+    return session
 
 
 def get_dag(dag) -> Tuple[str, DAG]:
-    dag = dag.get_dag()
-    return (dag.dag_id, dag)
+    try:
+        dag = dag.get_dag()
+        return (dag.dag_id, dag)
+    except Exception:
+        return (dag.dag_id, dag)
 
 
 def get_all_dags(get_pause_only: bool):
@@ -69,3 +88,19 @@ def fetch_dag(session, dag_id: str, get_pause_only: bool, confirm: bool) -> List
         raise e
     else:
         return dags
+
+
+def get_last_execution(dag):
+    try:
+        return dag.latest_execution_date
+    except Exception:
+        return dag.get_latest_execution_date()
+
+
+def trans_to_datetime(dtobj: Union[Pendulum, Datetime]) -> Datetime:
+    if isinstance(dtobj, Pendulum):
+        return datetime.fromtimestamp(dtobj.timestamp()).replace(tzinfo=utc)
+    elif isinstance(dtobj, datetime):
+        return dtobj
+    else:
+        return None

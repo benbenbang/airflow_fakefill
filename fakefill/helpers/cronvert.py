@@ -3,8 +3,8 @@ import re
 from datetime import datetime
 from typing import TypeVar
 
-# afill plugin
-from afill.helpers.logging import getLogger
+# fakefill plugin
+from fakefill.helpers.logging import getLogger
 
 logger = getLogger("cronvert")
 
@@ -36,9 +36,9 @@ VALIDATE_L_IN_DOW = re.compile("^[0-6]L$")
 VALIDATE_W = re.compile("^[0-3]?[0-9]W$")
 
 
-def cron_counts(cronexpr: str, num: int) -> int:
+def cron_counts(cronexpr: str) -> int:
     try:
-        return __CronToMonthly__(cronexpr)(num)
+        return __CronToMonthly__(cronexpr)()
     except Exception:
         logger.warning(f"Cannot parse cron expression: {cronexpr}. Using default value: 30")
         return 30
@@ -55,7 +55,7 @@ class __CronToMonthly__:
         """
         self.compute_epoch(line, epoch=DEFAULT_EPOCH, epoch_utc_offset=0)
 
-    def __call__(self, num: int) -> int:
+    def __call__(self) -> int:
         """ This method is just to calculate an approximate upper limit.
         Crontab like `* 8 1 * Sun` will be round up to "every minute past hour 8 on first day of month"
         i.e. Weekday will be dropped if get month day
@@ -70,12 +70,14 @@ class __CronToMonthly__:
         count_day = len(day)
 
         base_unit = 1
+        daily_unit = 1
 
         base_unit *= count_min if count_min else base_unit
         base_unit *= count_hour if count_hour else base_unit
+        daily_unit = base_unit
         base_unit *= count_day if count_day else base_unit
 
-        return base_unit
+        return base_unit, daily_unit
 
     def __repr__(self):
         base = self.__class__.__name__ + "(%s)"

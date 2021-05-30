@@ -11,7 +11,7 @@ Due to migrating to Kubernetes-host Airflow and using different backend, we need
 ### Method 1
 
 ```bash
-$ pip install afill
+$ pip install fakefill
 ```
 
 ### Method 2
@@ -33,7 +33,7 @@ $ pip install .
 ## Usages
 
 ```bash
-$ afill
+$ fakefill
 ```
 
 It takes 1 of 2 required argument, and 6 optional arguments. You can also define them in a yaml file and pass to the cli.
@@ -42,13 +42,13 @@ It takes 1 of 2 required argument, and 6 optional arguments. You can also define
 
     - Required [1 / 2]:
 
-        > - dag_id [-d]: can be a real dag id or "all" to fill all the dags
-        > - config_path [-cp]: path to the config yaml
+        > - dag_id [-d][reqired]: can be a real dag id or "all" to fill all the dags
+        > - config_path [-cp][choose one]: path to the config yaml
 
     - Optional:
-
-        >- start_date [-sd]: starting date, will use the one from default args if not given
-        >- maximum [-m]: maximum fill number per dag
+        >- start_date [-sd]: starting date, default will be counted from 365 days ago
+        >- maximum_day [-md]: maximum fill date per dag, rangint: [1, 180]
+        >- maximum_unit [-mu]: maxium fill unit per dag, rangint: [1, 43200]
         >- ignore [-i]: still procceed auto fill even the dag ran recently
         >- pause_only [-p]: pass true to fill dags which are pause
         >- confirm [-y]: pass true to bypass the prompt if dag_id is all
@@ -61,15 +61,15 @@ It takes 1 of 2 required argument, and 6 optional arguments. You can also define
 Fill all the dags for the past 30 days without prompt, and only fill if all the dags which have status == pause
 
 ```bash
-$ afill -d all -p -m 30 -y
+$ fakefill -d all -p -md 30 -y
 ```
 
 
 
-Run fastfill for dag id == `dag_a` with maximum default backfill days == 365
+Run fastfill for dag id == `dag_a` by counting default fakefill days == 365
 
 ```bash
-$ afill -d dag_a
+$ fakefill -d dag_a
 ```
 
 
@@ -77,7 +77,7 @@ $ afill -d dag_a
 Run fastfill with config yaml
 
 ```bash
-$ afill -cp config.yml
+$ fakefill -cp config.yml
 ```
 
 The yaml file needs to be defined with two dictonary types: `dags` and `settings`. For `dags` section, it needs to be a `list`, while the `settings`section is `dict`

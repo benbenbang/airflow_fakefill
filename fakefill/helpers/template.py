@@ -4,14 +4,14 @@ from pathlib import Path
 # pypi/conda library
 import yaml
 
-# afill plugin
-from afill.helpers.logging import getLogger
+# fakefill plugin
+from fakefill.helpers.logging import getLogger
 
 logger = getLogger("template")
 
 tmpl = {
     "dags": ["dag_a", "dag_b"],
-    "settings": {"start_date": "2019-01-01", "maximum": 365, "traceback": False, "confirm": True, "pause_only": True,},
+    "settings": {"start_date": "2019-01-01", "maximum": 365, "traceback": False, "confirm": True, "pause_only": True},
 }
 
 
