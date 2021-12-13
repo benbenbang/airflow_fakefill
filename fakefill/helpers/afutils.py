@@ -1,7 +1,7 @@
 # standard library
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Tuple, TypeVar, Union
 
 # pypi/conda library
@@ -92,9 +92,13 @@ def fetch_dag(session, dag_id: str, get_pause_only: bool, confirm: bool) -> List
 
 def get_last_execution(dag):
     try:
-        return dag.latest_execution_date
+        date = dag.latest_execution_date
     except Exception:
-        return dag.get_latest_execution_date()
+        date = dag.get_latest_execution_date()
+    finally:
+        if not date:
+            date = datetime.now(utc).replace(minute=0, second=0, microsecond=0) - timedelta(days=180)
+        return date
 
 
 def trans_to_datetime(dtobj: Union[Pendulum, Datetime]) -> Datetime:

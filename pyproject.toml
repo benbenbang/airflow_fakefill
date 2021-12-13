@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fakefill"
-version = "1.0.0"
+version = "1.0.1"
 description = "Fast & Fake Backfill Airflow DAGs Status"
 authors = ["Ben CHEN <bn@benbenbang.io>"]
 license = "MIT"

@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import NoReturn
 
+# pypi/conda library
+from sqlalchemy.exc import IntegrityError
+
 try:
     # pypi/conda library
     from pendulum import Pendulum
@@ -47,7 +50,7 @@ def fakefill(
         configs = {}
 
     # General settings
-    start_date = parse_date(configs.get("settings", {}).get("start_date", start_date))
+    start_date = parse_date(configs.get("settings", {}).get("start_date", start_date)) - timedelta(days=180)
     maximum_day = int(configs.get("settings", {}).get("maximum_day", maximum_day))
     maximum_unit = int(configs.get("settings", {}).get("maximum_unit", maximum_unit))
     ignore = parse_bool(configs.get("settings", {}).get("ignore", i))
@@ -120,16 +123,18 @@ def fakefill(
 
             for date in run_dates:
                 try:
-                    start_date = execution_date = date
+                    sdate = execution_date = date
                     # generate run id -> migration_yyyy-mm-ddthh:mm:ss+00:00
                     run_id = gen_run_id(start_date)
                     dag.create_dagrun(
                         run_id=run_id,
                         state=State.SUCCESS,
                         execution_date=execution_date,
-                        start_date=start_date,
+                        start_date=sdate,
                         external_trigger=external_trigger,
                     )
+                except IntegrityError:
+                    ok_task += 1
                 except Exception:
                     logger.debug(f"cannot auto backfill for {dag_id} on date {execution_date}")
                     pass
